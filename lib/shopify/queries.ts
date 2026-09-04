@@ -46,7 +46,7 @@ const PRODUCT_FRAGMENT = `
     variants(first: 50) {
       edges { node { ...VariantFields } }
     }
-    collections(first: 5) {
+    collections(first: 20) {
       edges { node { title handle } }
     }
     priceRange {

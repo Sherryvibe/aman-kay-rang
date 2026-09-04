@@ -110,6 +110,8 @@ export interface NormalizedProduct {
   category: string;            // First collection handle or productType
   categoryTitle: string;       // First collection title
   collection: string;          // First collection handle
+  collections: { title: string; handle: string }[]; // All Shopify collections this product belongs to
+  collectionHandles: string[]; // Lowercase handles of all collections this product belongs to
   badge?: "New" | "Bestseller" | "Limited";
   inStock: boolean;
   variants: NormalizedVariant[];

@@ -80,6 +80,12 @@ export function normalizeProduct(product: ShopifyProduct): NormalizedProduct {
   const altImage = images[1]?.url || mainImage;
 
   const firstCollection = product.collections.edges[0]?.node;
+  const collectionsList = product.collections?.edges?.map((e) => ({
+    title: e.node.title,
+    handle: e.node.handle,
+  })) || [];
+  const collectionHandles = collectionsList.map((c) => c.handle.toLowerCase());
+
   const sizes = extractSizes(product);
   const colors = extractColors(product);
   const variants = product.variants.edges.map((e) => normalizeVariant(e.node));
@@ -106,6 +112,8 @@ export function normalizeProduct(product: ShopifyProduct): NormalizedProduct {
     category,
     categoryTitle,
     collection: firstCollection?.handle || "",
+    collections: collectionsList,
+    collectionHandles,
     badge: detectBadge(product),
     inStock: product.availableForSale,
     variants,
@@ -124,21 +132,44 @@ export interface FetchResult<T> {
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * Fetch all products directly from Shopify.
+ * Fetch all products directly from Shopify using cursor-based pagination.
+ * Retrieves the complete catalog without an arbitrary fixed cap.
  * Returns { data: NormalizedProduct[], error: string | null }.
  * Does NOT fall back to any mock data.
  */
+interface ShopifyProductsResponse {
+  products: {
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    edges: { node: ShopifyProduct }[];
+  };
+}
+
 export async function getAllProducts(): Promise<FetchResult<NormalizedProduct[]>> {
   try {
-    const res = await shopifyFetch<{
-      products: { edges: { node: ShopifyProduct }[] };
-    }>({
-      query: PRODUCTS_QUERY,
-      variables: { first: 50 },
-    });
+    const allProducts: NormalizedProduct[] = [];
+    let hasNextPage = true;
+    let afterCursor: string | null = null;
+    const BATCH_SIZE = 100;
 
-    const products = res.products.edges.map((edge) => normalizeProduct(edge.node));
-    return { data: products, error: null };
+    while (hasNextPage) {
+      const res: ShopifyProductsResponse = await shopifyFetch<ShopifyProductsResponse>({
+        query: PRODUCTS_QUERY,
+        variables: { first: BATCH_SIZE, after: afterCursor },
+      });
+
+      const pageProducts = res.products.edges.map((edge) => normalizeProduct(edge.node));
+      allProducts.push(...pageProducts);
+
+      hasNextPage = res.products.pageInfo.hasNextPage;
+      afterCursor = res.products.pageInfo.endCursor;
+
+      // Circuit breaker to prevent runaway pagination
+      if (!afterCursor || allProducts.length >= 5000) {
+        break;
+      }
+    }
+
+    return { data: allProducts, error: null };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to fetch products from Shopify.";
     if (process.env.NODE_ENV === "development") {

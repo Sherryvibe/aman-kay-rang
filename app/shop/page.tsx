@@ -7,18 +7,35 @@ import Container from "@/components/ui/Container";
 import RevealOnScroll from "@/components/ui/RevealOnScroll";
 import ProductCard from "@/components/product/ProductCard";
 import { getAllProducts } from "@/lib/shopify/products";
-import type { NormalizedProduct } from "@/lib/shopify/types";
+import { getAllCollections } from "@/lib/shopify/collections";
+import type { NormalizedProduct, NormalizedCollection } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
 
 function ShopContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const categoryParam = searchParams.get("category");
+  const categoryParam = searchParams.get("category") || searchParams.get("collection");
 
   const [products, setProducts] = useState<NormalizedProduct[]>([]);
+  const [collections, setCollections] = useState<NormalizedCollection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [collectionsLoading, setCollectionsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
   const [selectedCat, setSelectedCat] = useState("all");
+
+  const fetchCollections = async () => {
+    setCollectionsLoading(true);
+    const res = await getAllCollections();
+    if (res.error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Shopify API Failure] getAllCollections on Shop:", res.error);
+      }
+      setCollections([]);
+    } else {
+      setCollections(res.data);
+    }
+    setCollectionsLoading(false);
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -34,33 +51,31 @@ function ShopContent() {
     setLoading(false);
   };
 
+  const handleRetry = () => {
+    fetchCollections();
+    fetchProducts();
+  };
+
   useEffect(() => {
+    fetchCollections();
     fetchProducts();
   }, []);
 
-  // Dynamically derive category filter chips from live Shopify products
+  // Dynamically derive category filter chips directly from live Shopify collections
   const categories = useMemo(() => {
-    const chipSet = new Map<string, string>();
-    chipSet.set("all", "All");
-
-    products.forEach((p) => {
-      if (p.category) {
-        const key = p.category.toLowerCase();
-        const label = p.categoryTitle || p.category.charAt(0).toUpperCase() + p.category.slice(1);
-        chipSet.set(key, label);
-      }
-      if (p.badge) {
-        const key = p.badge.toLowerCase();
-        chipSet.set(key, p.badge);
-      }
+    const list = [{ key: "all", label: "All Products" }];
+    collections.forEach((col) => {
+      list.push({
+        key: col.slug.toLowerCase(),
+        label: col.name,
+      });
     });
-
-    return Array.from(chipSet.entries()).map(([key, label]) => ({ key, label }));
-  }, [products]);
+    return list;
+  }, [collections]);
 
   useEffect(() => {
     if (categoryParam) {
-      const lower = categoryParam.toLowerCase();
+      const lower = categoryParam.toLowerCase().trim();
       setSelectedCat(lower);
     } else {
       setSelectedCat("all");
@@ -78,13 +93,23 @@ function ShopContent() {
 
   const filteredProducts = useMemo(() => {
     if (selectedCat === "all") return products;
-    return products.filter(
-      (p) =>
-        p.category.toLowerCase() === selectedCat ||
-        p.productType.toLowerCase() === selectedCat ||
-        (p.badge && p.badge.toLowerCase() === selectedCat) ||
-        p.tags.some((t) => t.toLowerCase() === selectedCat)
-    );
+    return products.filter((p) => {
+      // 1. Direct match in Shopify collection handles (highest fidelity)
+      if (p.collectionHandles && p.collectionHandles.includes(selectedCat)) {
+        return true;
+      }
+      // 2. Fallbacks for legacy single collection slug, category handle, or productType
+      if (p.collection && p.collection.toLowerCase() === selectedCat) {
+        return true;
+      }
+      if (p.category && p.category.toLowerCase() === selectedCat) {
+        return true;
+      }
+      if (p.productType && p.productType.toLowerCase().replace(/\s+/g, "-") === selectedCat) {
+        return true;
+      }
+      return false;
+    });
   }, [selectedCat, products]);
 
   return (
@@ -120,8 +145,14 @@ function ShopContent() {
 
       <div className="py-8 md:py-14">
         <Container className="space-y-10">
-          {/* Category filter chips — shown when products exist */}
-          {categories.length > 1 && (
+          {/* Dynamic Category filter chips from Shopify */}
+          {collectionsLoading && collections.length === 0 ? (
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-line/60 pb-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex-shrink-0 h-10 w-28 bg-beige/50 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : (
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-line/60 pb-6">
               {categories.map((cat) => (
                 <button
@@ -167,7 +198,7 @@ function ShopContent() {
                 </p>
               </div>
               <button
-                onClick={fetchProducts}
+                onClick={handleRetry}
                 className="inline-flex items-center justify-center gap-2 h-11 px-6 bg-rose text-white text-[11px] font-semibold tracking-eyebrow uppercase rounded-xl hover:bg-roseHover transition-colors"
               >
                 <RotateCw size={14} />
@@ -192,8 +223,27 @@ function ShopContent() {
                 </p>
               </div>
             </div>
+          ) : filteredProducts.length === 0 ? (
+            /* 4. Elegant Empty Filtered Collection State */
+            <div className="py-20 text-center max-w-md mx-auto space-y-5 bg-beige/20 p-8 rounded-2xl border border-line/60">
+              <div className="w-12 h-12 rounded-full bg-rose/10 text-roseDeep flex items-center justify-center mx-auto">
+                <Sparkles size={20} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-serif text-[22px] text-ink font-light">No Products in Collection</h3>
+                <p className="text-[13px] text-muted font-light leading-relaxed">
+                  New handcrafted arrivals are being prepared for this collection. Please check back soon.
+                </p>
+              </div>
+              <button
+                onClick={() => handleCategoryChange("all")}
+                className="inline-flex items-center justify-center h-10 px-6 bg-rose text-white text-[11px] font-semibold tracking-eyebrow uppercase rounded-xl hover:bg-roseHover transition-colors"
+              >
+                View All Products
+              </button>
+            </div>
           ) : (
-            /* 4. Real Shopify Product Grid */
+            /* 5. Real Shopify Product Grid */
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {filteredProducts.map((product, idx) => (
                 <RevealOnScroll key={product.slug} delay={(idx % 4) * 0.08}>

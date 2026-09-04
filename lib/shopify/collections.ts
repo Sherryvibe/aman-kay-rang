@@ -36,7 +36,7 @@ export async function getAllCollections(): Promise<FetchResult<NormalizedCollect
       collections: { edges: { node: ShopifyCollection }[] };
     }>({
       query: COLLECTIONS_QUERY,
-      variables: { first: 20 },
+      variables: { first: 100 },
     });
 
     // Ignore default Shopify "frontpage" collection if other collections exist
@@ -71,7 +71,7 @@ export async function getCollectionByHandle(
       }) | null;
     }>({
       query: COLLECTION_BY_HANDLE_QUERY,
-      variables: { handle, productsFirst: 50 },
+      variables: { handle, productsFirst: 100 },
     });
 
     if (!res.collectionByHandle) {
