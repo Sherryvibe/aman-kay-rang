@@ -10,7 +10,6 @@ export default function CheckoutPage() {
   const checkoutUrl = useCartStore((s) => s.checkoutUrl);
   const getCheckoutUrl = useCartStore((s) => s.getCheckoutUrl);
 
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,11 +17,9 @@ export default function CheckoutPage() {
 
     async function handleRedirect() {
       if (items.length === 0) {
-        setIsLoading(false);
         return;
       }
 
-      setIsLoading(true);
       setError(null);
 
       try {
@@ -40,13 +37,11 @@ export default function CheckoutPage() {
 
         if (isMounted) {
           setError("Unable to retrieve checkout link from Shopify. Please try again.");
-          setIsLoading(false);
         }
       } catch (err) {
         console.error("[Checkout Page Error]:", err);
         if (isMounted) {
           setError("Unable to open checkout. Please try again.");
-          setIsLoading(false);
         }
       }
     }

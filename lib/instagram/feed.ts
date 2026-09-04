@@ -9,6 +9,16 @@ export interface InstagramPost {
   caption?: string;
 }
 
+interface InstagramGraphMediaItem {
+  id: string;
+  caption?: string;
+  media_type?: string;
+  media_url?: string;
+  permalink?: string;
+  thumbnail_url?: string;
+  timestamp?: string;
+}
+
 export const OFFICIAL_INSTAGRAM_URL = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/amankayrang";
 
 const DEFAULT_INSTAGRAM_POSTS: InstagramPost[] = [
@@ -72,9 +82,9 @@ export async function getInstagramPosts(limit: number = 6): Promise<InstagramPos
       return DEFAULT_INSTAGRAM_POSTS.slice(0, limit);
     }
 
-    return data.data.map((item: any) => ({
+    return (data.data as InstagramGraphMediaItem[]).map((item: InstagramGraphMediaItem) => ({
       id: item.id,
-      media_url: item.media_type === "VIDEO" ? item.thumbnail_url || item.media_url : item.media_url,
+      media_url: item.media_type === "VIDEO" ? item.thumbnail_url || item.media_url || "" : item.media_url || "",
       permalink: item.permalink || OFFICIAL_INSTAGRAM_URL,
       caption: item.caption || "Aman Kay Rang Instagram Post",
     }));

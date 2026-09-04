@@ -6,7 +6,6 @@ import RevealOnScroll from "@/components/ui/RevealOnScroll";
 import BotanicalDecor from "@/components/ui/BotanicalDecor";
 import Container from "@/components/ui/Container";
 import Eyebrow from "@/components/ui/Eyebrow";
-import { img, photos } from "@/lib/images";
 
 export default function BrandStory() {
   return (

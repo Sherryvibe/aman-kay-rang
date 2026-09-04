@@ -10,7 +10,6 @@ import { formatPrice } from "@/lib/utils";
 export default function CartDrawer() {
   const items = useCartStore((s) => s.items);
   const isOpen = useCartStore((s) => s.isOpen);
-  const checkoutUrl = useCartStore((s) => s.checkoutUrl);
   const closeCart = useCartStore((s) => s.closeCart);
   const remove = useCartStore((s) => s.remove);
   const updateQty = useCartStore((s) => s.updateQty);
