@@ -5,15 +5,14 @@ import Image from "next/image";
 import Container from "@/components/ui/Container";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevealOnScroll from "@/components/ui/RevealOnScroll";
-import { img, photos } from "@/lib/images";
 
 const lookbookImages = [
-  { id: photos.lookbook1, alt: "Aman Kay Rang Editorial — soft drapery portrait" },
-  { id: photos.lookbook2, alt: "Aman Kay Rang Editorial — heritage silhouette study" },
-  { id: photos.lookbook3, alt: "Aman Kay Rang Editorial — artisan weave portrait" },
-  { id: photos.lookbook4, alt: "Aman Kay Rang Editorial — pattern detail close-up" },
-  { id: photos.lookbook5, alt: "Aman Kay Rang Editorial — summer lawn editorial" },
-  { id: photos.lookbook6, alt: "Aman Kay Rang Editorial — evening embroidery" },
+  { src: "/images/Lookbook 1.jpg", alt: "Aman Kay Rang Lookbook — Editorial Collection 1" },
+  { src: "/images/Lookbook 2.jpg", alt: "Aman Kay Rang Lookbook — Editorial Collection 2" },
+  { src: "/images/Lookbook 3.jpg", alt: "Aman Kay Rang Lookbook — Editorial Collection 3" },
+  { src: "/images/Lookbook 4.jpg", alt: "Aman Kay Rang Lookbook — Editorial Collection 4" },
+  { src: "/images/Lookbook 5.jpg", alt: "Aman Kay Rang Lookbook — Editorial Collection 5" },
+  { src: "/images/Lookbook 6.jpg", alt: "Aman Kay Rang Lookbook — Editorial Collection 6" },
 ];
 
 export default function LookbookGrid() {
@@ -37,10 +36,10 @@ export default function LookbookGrid() {
                 style={{ backgroundColor: "#E8DDD3" }}
               >
                 <Image
-                  src={img(item.id, { w: 560, q: 80 })}
+                  src={item.src}
                   alt={item.alt}
                   fill
-                  quality={80}
+                  quality={85}
                   sizes="(max-width: 768px) 220px, 280px"
                   className="object-cover object-center transition-transform duration-[1200ms] ease-luxury group-hover:scale-[1.03]"
                   loading="lazy"
