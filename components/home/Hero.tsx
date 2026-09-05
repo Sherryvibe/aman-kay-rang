@@ -1,107 +1,106 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import Link from "next/link";
 import BotanicalDecor from "@/components/ui/BotanicalDecor";
 import MagneticButton from "@/components/ui/MagneticButton";
 
-const HERO_IMAGES = [
-  {
-    src: "/images/hero.png",
-    alt: "Aman Kay Rang — woman in handcrafted Pakistani floral lawn dress",
-  },
-  {
-    src: "/images/Hero image 1.png",
-    alt: "Aman Kay Rang — Handcrafted Heritage Collection",
-  },
-  {
-    src: "/images/Hero image 2.png",
-    alt: "Aman Kay Rang — Traditional Artisanal Elegance",
-  },
-  {
-    src: "/images/Hero Image 3.PNG",
-    alt: "Aman Kay Rang — Luxury Pret & Couture",
-  },
-];
-
 export default function Hero() {
-  const [currentIdx, setCurrentIdx] = useState(0);
   const { scrollY } = useScroll();
   const reduced = useReducedMotion();
 
-  // 8-second auto rotation
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIdx((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 8000);
-    return () => clearInterval(timer);
-  }, []);
-
   // Parallax — skip on reduced motion
-  const y = useTransform(scrollY, [0, 800], reduced ? [0, 0] : [0, 180]);
+  const y = useTransform(scrollY, [0, 800], reduced ? [0, 0] : [0, 160]);
   const opacity = useTransform(scrollY, [0, 500], [1, 0]);
 
   const fade = (delay: number) => ({
-    initial: { opacity: 0, y: reduced ? 0 : 24 },
+    initial: { opacity: 0, y: reduced ? 0 : 20 },
     animate: { opacity: 1, y: 0 },
     transition: {
-      duration: 0.9,
+      duration: 0.85,
       delay: reduced ? 0 : delay,
       ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
     },
   });
 
-  return (
-    <section className="relative h-screen min-h-[720px] w-full overflow-hidden bg-beige">
-      {/* Parallax image layer with 8s smooth cross-fade */}
-      <motion.div style={{ y }} className="absolute inset-0 will-change-transform">
-        {HERO_IMAGES.map((img, idx) => (
-          <motion.div
-            key={img.src}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: idx === currentIdx ? 1 : 0 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="absolute inset-0"
-          >
-            <Image
-              src={img.src}
-              alt={img.alt}
-              fill
-              priority={idx === 0}
-              quality={92}
-              sizes="100vw"
-              className="object-cover object-[65%_25%] md:object-[70%_25%] lg:object-[75%_20%]"
-              style={{ backgroundColor: "#E8DDD3" }}
-            />
-          </motion.div>
-        ))}
+  // Next.js responsive art-direction configuration
+  const commonImageProps = {
+    alt: "Aman Kay Rang — Handcrafted Stories, Woven Into Every Thread",
+    fill: true,
+    priority: true,
+    quality: 92,
+  };
 
-        {/* Dark gradient scrims for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/15 to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent z-10 pointer-events-none" />
+  const {
+    props: { srcSet: desktopSrcSet },
+  } = getImageProps({
+    ...commonImageProps,
+    src: "/images/hero/hero-desktop.png",
+    sizes: "(min-width: 768px) 100vw, 1px",
+  });
+
+  const {
+    props: { srcSet: mobileSrcSet, ...imgFallbackProps },
+  } = getImageProps({
+    ...commonImageProps,
+    src: "/images/hero/hero-mobile.png",
+    sizes: "(max-width: 767px) 100vw, 1px",
+  });
+
+  return (
+    <section className="relative h-[100svh] min-h-[600px] md:h-screen md:min-h-[720px] w-full overflow-hidden bg-beige">
+      {/* Parallax image layer with true responsive art direction */}
+      <motion.div style={{ y }} className="absolute inset-0 will-change-transform">
+        <picture className="absolute inset-0 block w-full h-full">
+          <source media="(max-width: 767px)" srcSet={mobileSrcSet} />
+          <source media="(min-width: 768px)" srcSet={desktopSrcSet} />
+          <img
+            {...imgFallbackProps}
+            alt="Aman Kay Rang — Handcrafted Stories, Woven Into Every Thread"
+            className="w-full h-full object-cover object-[center_top] md:object-[75%_20%]"
+            style={{ ...imgFallbackProps.style, backgroundColor: "#E8DDD3" }}
+          />
+        </picture>
+
+        {/* Top gradient scrim for transparent header contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-transparent z-10 pointer-events-none" />
+
+        {/* Mobile vertical gradient scrim (preserves models' faces at top, ensures text readability at bottom) */}
+        <div className="block md:hidden absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent z-10 pointer-events-none" />
+
+        {/* Desktop horizontal gradient scrim (soft shade on left for text, clear view of models on right) */}
+        <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent z-10 pointer-events-none" />
       </motion.div>
 
       {/* Botanical decorative SVGs */}
-      <BotanicalDecor position="top-left" variant="cherry" className="text-rose/30 w-56 md:w-72 z-20 pointer-events-none" />
-      <BotanicalDecor position="bottom-right" variant="cherry" className="text-rose/25 w-48 md:w-64 z-20 pointer-events-none" />
+      <BotanicalDecor
+        position="top-left"
+        variant="cherry"
+        className="text-rose/30 w-44 sm:w-56 md:w-72 z-20 pointer-events-none"
+      />
+      <BotanicalDecor
+        position="bottom-right"
+        variant="cherry"
+        className="text-rose/25 w-40 sm:w-48 md:w-64 z-20 pointer-events-none"
+      />
 
       {/* Content — fades out on scroll */}
       <motion.div
         style={{ opacity }}
-        className="relative h-full max-w-[1400px] mx-auto px-6 md:px-10 flex flex-col justify-center z-20"
+        className="relative h-full max-w-[1400px] mx-auto px-6 md:px-10 flex flex-col justify-end pb-20 md:justify-center md:pb-0 z-20"
       >
         <div className="max-w-xl">
           <motion.p
             {...fade(0.1)}
-            className="text-[11px] tracking-[0.25em] uppercase text-ivory/90 mb-6 font-medium"
+            className="text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-ivory/90 mb-3 md:mb-6 font-medium"
           >
             Aman Kay Rang
           </motion.p>
 
           <motion.h1
             {...fade(0.25)}
-            className="font-serif font-light text-5xl md:text-7xl leading-[1.05] text-ivory"
+            className="font-serif font-light text-4xl sm:text-5xl md:text-7xl leading-[1.08] text-ivory"
           >
             Handcrafted Stories,
             <br />
@@ -110,16 +109,16 @@ export default function Hero() {
 
           <motion.p
             {...fade(0.45)}
-            className="mt-6 text-[11px] tracking-[0.2em] uppercase text-ivory/80"
+            className="mt-4 md:mt-6 text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-ivory/80"
           >
             Celebrating Heritage. Honoring Aman.
           </motion.p>
 
-          <motion.div {...fade(0.6)} className="mt-10">
+          <motion.div {...fade(0.6)} className="mt-7 md:mt-10">
             <MagneticButton strength={10}>
               <Link
                 href="/shop"
-                className="inline-flex items-center justify-center h-12 px-8 bg-rose text-white text-[11px] font-semibold tracking-[0.2em] uppercase rounded-xl hover:bg-roseHover transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-2 focus-visible:ring-offset-ivory"
+                className="inline-flex items-center justify-center h-11 md:h-12 px-7 md:px-8 bg-rose text-white text-[11px] font-semibold tracking-[0.2em] uppercase rounded-xl hover:bg-roseHover transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-2 focus-visible:ring-offset-ivory"
               >
                 Shop Now
               </Link>
@@ -127,38 +126,20 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* Bottom controls bar: Scroll indicator (left) + Slide indicators (right) */}
-        <div className="absolute bottom-10 inset-x-6 md:inset-x-10 flex justify-between items-center z-20">
-          {/* Scroll indicator with bounce */}
-          <motion.div
-            {...fade(1.0)}
-            className="flex items-center gap-3 text-[10px] tracking-[0.25em] uppercase text-ivory/70 select-none"
-          >
-            <motion.span
-              animate={reduced ? {} : { y: [0, 4, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="block w-px h-8 bg-ivory/50"
-            />
-            Scroll
-          </motion.div>
-
-          {/* Slide Indicator Dots */}
-          <div className="flex items-center gap-2">
-            {HERO_IMAGES.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIdx(idx)}
-                aria-label={`Go to slide ${idx + 1}`}
-                className={`h-1.5 rounded-full transition-all duration-500 ${
-                  idx === currentIdx
-                    ? "w-8 bg-rose"
-                    : "w-2 bg-ivory/50 hover:bg-ivory/80"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+        {/* Scroll indicator with subtle bounce animation */}
+        <motion.div
+          {...fade(0.9)}
+          className="absolute bottom-6 md:bottom-10 left-6 md:left-10 flex items-center gap-3 text-[10px] tracking-[0.25em] uppercase text-ivory/70 select-none z-20"
+        >
+          <motion.span
+            animate={reduced ? {} : { y: [0, 4, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="block w-px h-6 md:h-8 bg-ivory/50"
+          />
+          Scroll
+        </motion.div>
       </motion.div>
     </section>
   );
 }
+

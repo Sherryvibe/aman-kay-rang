@@ -24,9 +24,9 @@ export const OFFICIAL_INSTAGRAM_URL = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "
 const DEFAULT_INSTAGRAM_POSTS: InstagramPost[] = [
   {
     id: "ig-1",
-    media_url: "/images/Hero image.png",
+    media_url: "/images/hero/hero-desktop.png",
     permalink: OFFICIAL_INSTAGRAM_URL,
-    caption: "Handcrafted Heritage — Traditional Floral Lawn Collection #AmanKayRang",
+    caption: "Handcrafted Heritage — Traditional Saree & Luxury Pret #AmanKayRang",
   },
   {
     id: "ig-2",
@@ -48,13 +48,13 @@ const DEFAULT_INSTAGRAM_POSTS: InstagramPost[] = [
   },
   {
     id: "ig-5",
-    media_url: "/images/Hero image 1.png",
+    media_url: "/images/hero/hero-mobile.png",
     permalink: OFFICIAL_INSTAGRAM_URL,
-    caption: "Timeless Embroidery & Craftsmanship #PakistaniCouture",
+    caption: "Timeless Drape & Craftsmanship #PakistaniCouture",
   },
   {
     id: "ig-6",
-    media_url: "/images/Hero image 2.png",
+    media_url: "/images/mockup.jpg",
     permalink: OFFICIAL_INSTAGRAM_URL,
     caption: "Vibrant Palettes, Handwoven Stories #AmanKayRang",
   },
