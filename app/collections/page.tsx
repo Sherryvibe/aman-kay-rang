@@ -9,6 +9,41 @@ import RevealOnScroll from "@/components/ui/RevealOnScroll";
 import { getAllCollections } from "@/lib/shopify/collections";
 import type { NormalizedCollection } from "@/lib/shopify/types";
 
+const ORDERED_COLLECTIONS: string[] = [
+  "Daastan - e - Neel",
+  "Kurta",
+  "Suits",
+  "Saree",
+  "Doshala",
+  "Ghagra",
+  "Gharara",
+  "Jackets",
+  "Placements and runners",
+  "Ombre By Aman Home Accessories",
+  "Dulai",
+  "Throw",
+  "Wall Art",
+];
+
+function normalizeKey(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+const ORDERED_KEYS = ORDERED_COLLECTIONS.map(normalizeKey);
+
+function getCollectionOrderIndex(col: NormalizedCollection): number {
+  const slugKey = normalizeKey(col.slug || "");
+  const nameKey = normalizeKey(col.name || "");
+
+  const slugIdx = ORDERED_KEYS.indexOf(slugKey);
+  if (slugIdx !== -1) return slugIdx;
+
+  const nameIdx = ORDERED_KEYS.indexOf(nameKey);
+  if (nameIdx !== -1) return nameIdx;
+
+  return 999;
+}
+
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<NormalizedCollection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +57,10 @@ export default function CollectionsPage() {
       setApiError(res.error);
       setCollections([]);
     } else {
-      setCollections(res.data);
+      const sorted = [...res.data].sort((a, b) => {
+        return getCollectionOrderIndex(a) - getCollectionOrderIndex(b);
+      });
+      setCollections(sorted);
       setApiError(null);
     }
     setLoading(false);
