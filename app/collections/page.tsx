@@ -9,39 +9,100 @@ import RevealOnScroll from "@/components/ui/RevealOnScroll";
 import { getAllCollections } from "@/lib/shopify/collections";
 import type { NormalizedCollection } from "@/lib/shopify/types";
 
-const ORDERED_COLLECTIONS: string[] = [
-  "Daastan - e - Neel",
-  "Kurta",
-  "Suits",
-  "Saree",
-  "Doshala",
-  "Ghagra",
-  "Gharara",
-  "Jackets",
-  "Placements and runners",
-  "Ombre By Aman Home Accessories",
-  "Dulai",
-  "Throw",
-  "Wall Art",
-];
-
-function normalizeKey(str: string): string {
-  return str.toLowerCase().replace(/[^a-z0-9]/g, "");
+interface CollectionMatcher {
+  target: string;
+  matches: (slug: string, name: string) => boolean;
 }
 
-const ORDERED_KEYS = ORDERED_COLLECTIONS.map(normalizeKey);
+const TARGET_COLLECTION_ORDER: CollectionMatcher[] = [
+  {
+    target: "Kurta",
+    matches: (slug, name) =>
+      slug === "kurta" || name.toLowerCase().includes("kurta"),
+  },
+  {
+    target: "Suits",
+    matches: (slug, name) =>
+      slug === "suits" || name.toLowerCase().includes("suit"),
+  },
+  {
+    target: "Doshallas",
+    matches: (slug, name) =>
+      slug.includes("doshala") ||
+      slug.includes("doshalla") ||
+      name.toLowerCase().includes("doshala") ||
+      name.toLowerCase().includes("doshalla"),
+  },
+  {
+    target: "Saree",
+    matches: (slug, name) =>
+      slug === "saree" ||
+      name.toLowerCase().includes("saree") ||
+      name.toLowerCase().includes("sari"),
+  },
+  {
+    target: "Dastan e Neel",
+    matches: (slug, name) =>
+      slug.includes("daastan") ||
+      slug.includes("dastan") ||
+      name.toLowerCase().includes("neel"),
+  },
+  {
+    target: "Ghararas",
+    matches: (slug, name) =>
+      slug.includes("gharara") || name.toLowerCase().includes("gharara"),
+  },
+  {
+    target: "Ghagra",
+    matches: (slug, name) =>
+      slug.includes("ghagra") || name.toLowerCase().includes("ghagra"),
+  },
+  {
+    target: "Jackets",
+    matches: (slug, name) =>
+      slug.includes("jacket") || name.toLowerCase().includes("jacket"),
+  },
+  {
+    target: "Bedspread",
+    matches: (slug, name) =>
+      slug.includes("bedspread") ||
+      name.toLowerCase().includes("bedspread") ||
+      slug.includes("ombre") ||
+      name.toLowerCase().includes("ombre"),
+  },
+  {
+    target: "Dulai",
+    matches: (slug, name) =>
+      slug.includes("dulai") ||
+      slug.includes("dolai") ||
+      name.toLowerCase().includes("dulai"),
+  },
+  {
+    target: "Placemats",
+    matches: (slug, name) =>
+      slug.includes("placement") ||
+      slug.includes("placemat") ||
+      name.toLowerCase().includes("placement") ||
+      name.toLowerCase().includes("placemat"),
+  },
+  {
+    target: "Wall Hanging",
+    matches: (slug, name) =>
+      slug.includes("wall") || name.toLowerCase().includes("wall"),
+  },
+  {
+    target: "Throw",
+    matches: (slug, name) =>
+      slug.includes("throw") || name.toLowerCase().includes("throw"),
+  },
+];
 
 function getCollectionOrderIndex(col: NormalizedCollection): number {
-  const slugKey = normalizeKey(col.slug || "");
-  const nameKey = normalizeKey(col.name || "");
+  const slug = (col.slug || "").toLowerCase();
+  const name = col.name || "";
 
-  const slugIdx = ORDERED_KEYS.indexOf(slugKey);
-  if (slugIdx !== -1) return slugIdx;
-
-  const nameIdx = ORDERED_KEYS.indexOf(nameKey);
-  if (nameIdx !== -1) return nameIdx;
-
-  return 999;
+  const idx = TARGET_COLLECTION_ORDER.findIndex((entry) => entry.matches(slug, name));
+  return idx !== -1 ? idx : 999;
 }
 
 export default function CollectionsPage() {
